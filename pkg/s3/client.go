@@ -11,7 +11,6 @@ import (
 	"io"
 	"net/url"
 	"path"
-	"strconv"
 )
 
 const (
@@ -31,7 +30,6 @@ type Config struct {
 	Region          string
 	Endpoint        string
 	Mounter         string
-	UsePathStyle    bool
 }
 
 type FSMeta struct {
@@ -42,8 +40,6 @@ type FSMeta struct {
 	FSPath        string `json:"FSPath"`
 	CapacityBytes int64  `json:"CapacityBytes"`
 }
-
-const UsePathStyleKey = "usePathStyle"
 
 func NewClient(cfg *Config) (*s3Client, error) {
 	var client = &s3Client{}
@@ -58,18 +54,10 @@ func NewClient(cfg *Config) (*s3Client, error) {
 	if u.Port() != "" {
 		endpoint = u.Hostname() + ":" + u.Port()
 	}
-
-	bucketLookup := minio.BucketLookupDNS
-	if client.Config.UsePathStyle {
-		bucketLookup = minio.BucketLookupPath
-	}
-
 	minioClient, err := minio.New(endpoint, &minio.Options{
-		Creds:        credentials.NewStaticV4(client.Config.AccessKeyID, client.Config.SecretAccessKey, client.Config.Region),
-		Secure:       ssl,
-		BucketLookup: bucketLookup,
+		Creds:  credentials.NewStaticV4(client.Config.AccessKeyID, client.Config.SecretAccessKey, client.Config.Region),
+		Secure: ssl,
 	})
-	glog.V(4).Infof("S3 client initialized endpoint=%s region=%s usePathStyle=%t", endpoint, client.Config.Region, client.Config.UsePathStyle)
 	if err != nil {
 		return nil, err
 	}
@@ -79,31 +67,14 @@ func NewClient(cfg *Config) (*s3Client, error) {
 }
 
 func NewClientFromSecret(secret map[string]string) (*s3Client, error) {
-	return NewClientFromSecretWithParams(secret, nil)
-}
-
-func NewClientFromSecretWithParams(secret map[string]string, params map[string]string) (*s3Client, error) {
-	usePathStyle := parseBoolOption(secret, UsePathStyleKey) || parseBoolOption(params, UsePathStyleKey)
 	return NewClient(&Config{
 		AccessKeyID:     secret["accessKeyID"],
 		SecretAccessKey: secret["secretAccessKey"],
 		Region:          secret["region"],
 		Endpoint:        secret["endpoint"],
 		// Mounter is set in the volume preferences, not secrets
-		Mounter:      "",
-		UsePathStyle: usePathStyle,
+		Mounter: "",
 	})
-}
-
-func parseBoolOption(values map[string]string, key string) bool {
-	if values == nil {
-		return false
-	}
-	if v, ok := values[key]; ok {
-		parsed, err := strconv.ParseBool(v)
-		return err == nil && parsed
-	}
-	return false
 }
 
 func (client *s3Client) BucketExists(bucketName string) (bool, error) {

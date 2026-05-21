@@ -95,7 +95,7 @@ func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVol
 		FSPath:        defaultFsPath,
 	}
 
-	client, err := s3.NewClientFromSecretWithParams(req.GetSecrets(), params)
+	client, err := s3.NewClientFromSecret(req.GetSecrets())
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize S3 client: %s", err)
 	}

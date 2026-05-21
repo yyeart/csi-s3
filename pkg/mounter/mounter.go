@@ -33,7 +33,6 @@ const (
 	BucketKey           = "bucket"
 	VolumePrefix        = "prefix"
 	UsePrefix           = "usePrefix"
-	UsePathStyle        = "usePathStyle"
 )
 
 // New returns a new mounter depending on the mounterType parameter

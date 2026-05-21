@@ -6,7 +6,11 @@ ADD . /build
 RUN go get -d -v ./...
 RUN CGO_ENABLED=0 GOOS=linux go build -a -ldflags '-extldflags "-static"' -o ./s3driver ./cmd/s3driver
 
+<<<<<<< HEAD
 FROM debian:bookworm-slim
+=======
+FROM debian:buster-slim
+>>>>>>> cc18bd9bc181aec6ec7e7f306639a28e538924cc
 LABEL maintainers="Cyrill Troxler <cyrilltroxler@gmail.com>"
 LABEL description="csi-s3 slim image"
 
